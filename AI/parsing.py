@@ -4,25 +4,22 @@ import pandas as pd
 
 # 1. Загружаем страницу по адресу url 
 url = f'https://yupest2.pythonanywhere.com/riviya/'
-response = requests.get(url)  
-soup = BeautifulSoup(response.text, 'html.parser')  
+response = requests.get(url)
+response.raise_for_status() # Проверяет, не было ли ошибки при запросе
+soup = BeautifulSoup(response.text, 'html.parser')
 
 # 2. Находим заголовки h1  
-data = soup.find_all('h1', {'name':'location'})
-data_new = []
+data_location = soup.find_all('h1', {'name':'location'})
+data_lattitude = soup.find_all('span', {'name': 'lattitude'})
+data_longitude = soup.find_all('span', {'name': 'longitude'})
+data_likes = soup.find_all('span', {'name': 'likes'})
 
-for element in data:
-    data_new.append(str(element)[20:-5])
+headers = ['location', 'lattitude', 'longitude', 'likes']
 
-data_lat = soup.find_all('span', {'name':'lattitude'})
+data_for_csv = []
 
-data_lon = soup.find_all('span', {'name':'longitude'})
+for i in range(len(data_location)):
+    data_for_csv.append([data_location[i].text, data_lattitude[i].text, data_longitude[i].text, data_likes[i].text[:-2]])
 
-coordinations = []
-
-for i in range(len(data_lon)):
-    coordinations.append(str(data_lat[i])[23:-7]+','+ str(data_lon[i])[23:-7])
-
-
-df = pd.DataFrame(coordinations, data_new) 
-df.to_csv('data_new.csv', mode='a', encoding='UTF-8')
+df = pd.DataFrame(data_for_csv, columns=headers)
+df.to_csv('data_new.csv', index=False, mode='a', encoding='UTF-8')
